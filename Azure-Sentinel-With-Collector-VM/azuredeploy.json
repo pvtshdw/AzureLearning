@@ -2,12 +2,14 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "workspace_name": {
-            "type": "string"
-        },
-        "location": {
-            "type": "string"
-        }
+      "workspace_name": {
+        "defaultValue": "[uniqueString(resourceGroup().id)]",
+        "type": "string"
+      },
+      "location": {
+        "defaultValue": "eastus",
+        "type": "string"
+      }
     },
     "resources": [
       {
