@@ -3,11 +3,11 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
       "uniquestring": {
-        "defaultValue": "[uniqueString(resourceGroup().id, utcnow())]",
+        "defaultValue": "[uniqueString(resourceGroup().id)]",
         "type": "string"
       },
       "workspace_name": {
-        "defaultValue": "[concat(parameters('uniquestring'), '.Workspace')]",
+        "defaultValue": "[concat(parameters('uniquestring'), 'Workspace')]",
         "type": "String"
       },
       "location": {
