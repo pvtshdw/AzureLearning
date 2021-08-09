@@ -1,0 +1,57 @@
+{
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "workbookDisplayName": {
+        "type": "string",
+        "defaultValue": "Log Ingest Workbook",
+        "metadata": {
+          "description": "The friendly name for the workbook that is used in the Gallery or Saved List.  This name must be unique within a resource group."
+        }
+      },
+      "workbookType": {
+        "type": "string",
+        "defaultValue": "workbook",
+        "metadata": {
+          "description": "The gallery that the workbook will been shown under. Supported values include workbook, tsg, etc. Usually, this is 'workbook'"
+        }
+      },
+      "workbookSourceId": {
+        "type": "string",
+        "defaultValue": "/subscriptions/<SubscriptionID>/resourceGroups/<ResourceGroupName>/providers/Microsoft.OperationalInsights/workspaces/<WorkspaceName>",
+        "metadata": {
+          "description": "The id of resource instance to which the workbook will be associated"
+        }
+      },
+      "workbookId": {
+        "type": "string",
+        "defaultValue": "[newGuid()]",
+        "metadata": {
+          "description": "The unique guid for this workbook instance"
+        }
+      }
+    },
+    "resources": [
+      {
+        "name": "[parameters('workbookId')]",
+        "type": "microsoft.insights/workbooks",
+        "location": "[resourceGroup().location]",
+        "apiVersion": "2018-06-17-preview",
+        "dependsOn": [],
+        "kind": "shared",
+        "properties": {
+          "displayName": "[parameters('workbookDisplayName')]",
+          "serializedData": "{\"version\":\"Notebook/1.0\",\"items\":[{\"type\":1,\"content\":{\"json\":\"## Log Ingest\\n---\\n\\nThis workbook displays data pertinent to monitoring log ingest to facilitate data-based decisions\\n\\n### Usage\\n\\nProvide the values below to show estimated cost compared to budget.  You can get these values by going to the \\\"Log Analytics Workspace\\\" and then click on \\\"Usage and estimated costs\\\".\\n\\n* Commitment Tier (GB) - This is how many GB per month of capacity is being reserved\\n* Commitment Tier Price per Month - This is the estimated monthly cost for the selected tier of capacity reservation\\n* Commitment Tier Overage Price per GB - This the price per gigabyte for any overages, which are billed at a discounted rate.\\n* Monthly Budget Amount - If you don't have a specific budget amount, you can use the estimated monthly cost for the next tier up as your amount\"},\"name\":\"text - 2\"},{\"type\":9,\"content\":{\"version\":\"KqlParameterItem/1.0\",\"parameters\":[{\"id\":\"62660ba4-c1d0-4c13-86a4-8dfe25cf6f54\",\"version\":\"KqlParameterItem/1.0\",\"name\":\"timerange\",\"label\":\"Time Range\",\"type\":4,\"isRequired\":true,\"value\":{\"durationMs\":7776000000},\"typeSettings\":{\"selectableValues\":[{\"durationMs\":259200000},{\"durationMs\":604800000},{\"durationMs\":1209600000},{\"durationMs\":2419200000},{\"durationMs\":2592000000},{\"durationMs\":5184000000},{\"durationMs\":7776000000}]},\"timeContext\":{\"durationMs\":86400000}},{\"id\":\"fd0e49fa-9926-4a5f-bd65-bd1fd239d76a\",\"version\":\"KqlParameterItem/1.0\",\"name\":\"capacity_GB\",\"label\":\"Commitment Tier (GB)\",\"type\":1,\"description\":\"What is the current reserved capacity (GB per day)\",\"isRequired\":true,\"value\":\"300\",\"typeSettings\":{\"paramValidationRules\":[{\"regExp\":\"(100|200|300|400|500)\",\"match\":true,\"message\":\"Please enter 100, 200, 300, 400, or 500\"}]},\"timeContext\":{\"durationMs\":86400000}},{\"id\":\"c4fd4564-8053-4395-83b6-52eb6da09f0b\",\"version\":\"KqlParameterItem/1.0\",\"name\":\"capcity_price_per_month\",\"label\":\"Commitment Tier Price per Month\",\"type\":1,\"description\":\"What is the monthly price for the reserved capacity?\",\"isRequired\":true,\"value\":\"17211.40\",\"typeSettings\":{\"paramValidationRules\":[{\"regExp\":\"\\\\d+(\\\\.\\\\d\\\\d)?\",\"match\":true,\"message\":\"Please enter a valid dollar amount\"}]},\"timeContext\":{\"durationMs\":86400000}},{\"id\":\"5e673758-20f6-4f3d-85af-9d5bd90fedea\",\"version\":\"KqlParameterItem/1.0\",\"name\":\"pay_as_you_go_price\",\"label\":\"Commitment Tier Overage Price per GB\",\"type\":1,\"description\":\"What is the \\\"Pay As You Go\\\" price per GB?\",\"isRequired\":true,\"value\":\"1.85\",\"typeSettings\":{\"paramValidationRules\":[{\"regExp\":\"\\\\d+(\\\\.\\\\d\\\\d)?\",\"match\":true,\"message\":\"Please enter a valid dollar amount\"}]},\"timeContext\":{\"durationMs\":86400000}},{\"id\":\"5af5ff94-775a-43e1-8e91-3c9dce0463e4\",\"version\":\"KqlParameterItem/1.0\",\"name\":\"total_budget\",\"label\":\"Monthly Budget Amount\",\"type\":1,\"description\":\"How much (dollar amount) per month are you budgeting?\",\"isRequired\":true,\"value\":\"32000\",\"typeSettings\":{\"paramValidationRules\":[{\"regExp\":\"\\\\d+(\\\\.\\\\d\\\\d)?\",\"match\":true,\"message\":\"Please enter a valid dollar amount\"}]},\"timeContext\":{\"durationMs\":86400000}}],\"style\":\"formVertical\",\"queryType\":0,\"resourceType\":\"microsoft.operationalinsights/workspaces\"},\"name\":\"parameters - 2\"},{\"type\":3,\"content\":{\"version\":\"KqlItem/1.0\",\"query\":\"// let capacity_GB = 100;\\n// let capacity_price_per_month = 201.52;\\nlet capacity_GB = toint({capacity_GB:value});\\nlet capacity_price_per_month = todouble({capcity_price_per_month:value});\\nlet price_per_GB = todouble({pay_as_you_go_price:value});\\nlet number_of_days = 31;\\nlet total_budget = todouble({total_budget:value});\\nlet threshold_per_day = toreal(total_budget) / toreal(number_of_days);\\nUsage\\n// | where TimeGenerated > startofday(ago(31d))\\n| where IsBillable == true\\n| summarize EstimatedCost = ((sum(Quantity) * 0.001 - capacity_GB) * price_per_GB) + (capacity_price_per_month / number_of_days)\\n    by bin_at(TimeGenerated, 1d, datetime(2021-02-17 18:00:00.000)), CostPerDay = threshold_per_day\\n| render timechart \",\"size\":1,\"title\":\"Estimated Ingest Cost vs. Budget\",\"timeContext\":{\"durationMs\":7776000000},\"timeContextFromParameter\":\"timerange\",\"queryType\":0,\"resourceType\":\"microsoft.operationalinsights/workspaces\"},\"name\":\"query-estimated-cost\"},{\"type\":3,\"content\":{\"version\":\"KqlItem/1.0\",\"query\":\"let capacity_GB = toint({capacity_GB:value});\\r\\nUsage\\r\\n| where TimeGenerated > startofday(ago(90d))\\r\\n| where IsBillable == true\\r\\n| summarize Total_Ingested = sum(Quantity) * 0.001\\r\\n    by bin_at(TimeGenerated, 1d, datetime(2021-02-17 18:00:00.000)), Reserved_Capacity = capacity_GB\\r\\n| render timechart \\r\\n\",\"size\":0,\"title\":\"Data Ingest (GB) vs. Capacity Reservation\",\"timeContext\":{\"durationMs\":7776000000},\"timeContextFromParameter\":\"timerange\",\"queryType\":0,\"resourceType\":\"microsoft.operationalinsights/workspaces\"},\"name\":\"query-data-ingest\"}],\"isLocked\":false,\"fallbackResourceIds\":[\"/subscriptions/d857b633-645f-4992-987d-8761b0eb01eb/resourceGroups/MS-DART-TEAM/providers/Microsoft.OperationalInsights/workspaces/DART-Sentinel\"]}",
+          "version": "1.0",
+          "sourceId": "[parameters('workbookSourceId')]",
+          "category": "[parameters('workbookType')]"
+        }
+      }
+    ],
+    "outputs": {
+      "workbookId": {
+        "type": "string",
+        "value": "[resourceId( 'microsoft.insights/workbooks', parameters('workbookId'))]"
+      }
+    },
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
+  }
